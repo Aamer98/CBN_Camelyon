@@ -18,36 +18,45 @@ import h5py
 
 from data import *
 from config import *
-from models
+from models import *
+from train import *
 
 
 if __name__ == '__main__':
     
-    xy_train = H5Dataset(feat_path = "/content/camelyonpatch_level_2_split_train_x.h5", 
-                    lbl_path = "/content/camelyonpatch_level_2_split_train_y.h5", 
+    xy_train = H5Dataset(feat_path = train_feat_path, 
+                    lbl_path = train_label_path, 
                     transform = transform, 
                     target_transform = target_transform)
 
-    xy_val = H5Dataset(feat_path = "/content/camelyonpatch_level_2_split_valid_x.h5", 
-                    lbl_path = "/content/camelyonpatch_level_2_split_valid_y.h5", 
+    xy_val = H5Dataset(feat_path = val_feat_path, 
+                    lbl_path = val_label_path, 
                     transform = transform, 
                     target_transform = target_transform)
+
+    train_dataloader = DataLoader(xy_train, batch_size=32, shuffle=False)
+    val_dataloader = DataLoader(xy_val, batch_size=32, shuffle=False)
+
+    dataloaders = {'train' : train_dataloader, 'val' : val_dataloader}
+    
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 
     model_ft = models.resnet18(pretrained=True)
     num_ftrs = model_ft.fc.in_features
-    # Here the size of each output sample is set to 2.
-    # Alternatively, it can be generalized to nn.Linear(num_ftrs, len(class_names)).
+
     model_ft.fc = nn.Linear(num_ftrs, 2)
 
     model_ft = model_ft.to(device)
 
     criterion = nn.CrossEntropyLoss()
 
-    # Observe that all parameters are being optimized
     optimizer_ft = optim.SGD(model_ft.parameters(), lr=0.001, momentum=0.9)
 
-    # Decay LR by a factor of 0.1 every 7 epochs
     exp_lr_scheduler = lr_scheduler.StepLR(optimizer_ft, step_size=7, gamma=0.1)
-    model_ft = train_model(model_ft, criterion, optimizer_ft, exp_lr_scheduler,
+    model_ft, train_logs = train_model(model_ft, criterion, optimizer_ft, exp_lr_scheduler,
                        num_epochs=25)
+    
+    
+
+    

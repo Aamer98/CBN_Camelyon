@@ -5,7 +5,7 @@ import torch.nn as nn
 import math
 import torch.utils.model_zoo as model_zoo
 
-from cbn import CBN
+from bn import BN
 
 from sequential_modified import Sequential
 
@@ -50,11 +50,11 @@ class BasicBlock(nn.Module):
         super(BasicBlock, self).__init__()
         self.conv1 = conv3x3(inplanes, planes, stride)
         # self.bn1 = nn.BatchNorm2d(planes)
-        self.bn1 = CBN(Batch_size, emb_size, planes)
+        self.bn1 = BN(Batch_size, planes)
         self.relu = nn.ReLU(inplace=True)
         self.conv2 = conv3x3(planes, planes)
         # self.bn2 = nn.BatchNorm2d(planes)
-        self.bn2 = CBN(Batch_size, emb_size, planes)
+        self.bn2 = BN(Batch_size, planes)
         self.downsample = downsample
         self.stride = stride
 
@@ -84,14 +84,14 @@ class Bottleneck(nn.Module):
         super(Bottleneck, self).__init__()
         self.conv1 = nn.Conv2d(inplanes, planes, kernel_size=1, bias=False)
         # self.bn1 = nn.BatchNorm2d(planes)
-        self.bn1 = CBN(Batch_size, emb_size, planes)
+        self.bn1 = BN(Batch_size, emb_size, planes)
         self.conv2 = nn.Conv2d(planes, planes, kernel_size=3, stride=stride,
                                padding=1, bias=False)
         # self.bn2 = nn.BatchNorm2d(planes)
-        self.bn2 = CBN(Batch_size, emb_size, planes)
+        self.bn2 = BN(Batch_size, emb_size, planes)
         self.conv3 = nn.Conv2d(planes, planes * 4, kernel_size=1, bias=False)
         # self.bn3 = nn.BatchNorm2d(planes * 4)
-        self.bn3 = CBN(Batch_size, emb_size, planes * 4)
+        self.bn3 = BN(Batch_size, emb_size, planes * 4)
         self.relu = nn.ReLU(inplace=True)
         self.downsample = downsample
         self.stride = stride
@@ -128,7 +128,7 @@ class ResNet(nn.Module):
         self.conv1 = nn.Conv2d(3, 64, kernel_size=7, stride=2, padding=3,
                                bias=False).cuda()
         # self.bn1 = nn.BatchNorm2d(64)
-        self.bn1 = CBN(self.Batch_size, self.emb_size, 64)
+        self.bn1 = BN(self.Batch_size, self.emb_size, 64)
         self.relu = nn.ReLU(inplace=True)
         self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
         self.layer1 = self._make_layer(block, 64, layers[0])
@@ -151,7 +151,7 @@ class ResNet(nn.Module):
         if stride != 1 or self.inplanes != planes * block.expansion:
             downsample = Sequential(
                 Conv2d(self.inplanes, planes * block.expansion, kernel_size=1, stride=stride, bias=False),
-                CBN(self.Batch_size, self.emb_size, planes * block.expansion),
+                BN(self.Batch_size, self.emb_size, planes * block.expansion),
                 # nn.BatchNorm2d(planes * block.expansion),
             )
 
