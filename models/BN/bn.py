@@ -8,11 +8,9 @@ CBN (Conditional Batch Normalization layer)
 '''
 class BN(nn.Module):
 
-    def __init__(self, stat_size, emb_size, out_size, batch_size, channels, height, width, use_betas=True, use_gammas=True, eps=1.0e-5):
+    def __init__(self, out_size, batch_size, channels, height, width, use_betas=True, use_gammas=True, eps=1.0e-5):
         super(BN, self).__init__()
 
-        self.stat_size = stat_size # size of the stat emb which is input to MLP
-        self.emb_size = emb_size # size of hidden layer of MLP
         self.out_size = out_size # output of the MLP - for each channel
         self.use_betas = use_betas
         self.use_gammas = use_gammas
@@ -27,45 +25,12 @@ class BN(nn.Module):
         self.gammas = nn.Parameter(torch.ones(self.batch_size, self.channels).cuda())
         self.eps = eps
 
-        # MLP used to predict betas and gammas
-        self.fc_gamma = nn.Sequential(
-            nn.Linear(self.stat_size, self.emb_size),
-            nn.ReLU(inplace=True),
-            nn.Linear(self.emb_size, self.out_size),
-            ).cuda()
-
-        self.fc_beta = nn.Sequential(
-            nn.Linear(self.stat_size, self.emb_size),
-            nn.ReLU(inplace=True),
-            nn.Linear(self.emb_size, self.out_size),
-            ).cuda()
 
         # initialize weights using Xavier initialization and biases with constant value
         for m in self.modules():
             if isinstance(m, nn.Linear):
                 nn.init.xavier_uniform(m.weight)
                 nn.init.constant(m.bias, 0.1)
-
-    '''
-    Predicts the value of delta beta and delta gamma for each channel
-    Arguments:
-        stat_emb : stat embedding of the question
-    Returns:
-        delta_betas, delta_gammas : for each layer
-    '''
-    def create_bn_input(self, stat_emb):
-
-        if self.use_betas:
-            delta_betas = self.fc_beta(stat_emb)
-        else:
-            delta_betas = torch.zeros(self.batch_size, self.channels).cuda()
-
-        if self.use_gammas:
-            delta_gammas = self.fc_gamma(stat_emb)
-        else:
-            delta_gammas = torch.zeros(self.batch_size, self.channels).cuda()
-
-        return delta_betas, delta_gammas
 
     '''
     Computer Normalized feature map with the updated beta and gamma values
@@ -79,18 +44,11 @@ class BN(nn.Module):
            and subsequent CBN layers will also require stat question embeddings
     '''
     def forward(self, feature, stat_emb):
+       
         self.batch_size, self.channels, self.height, self.width = feature.data.shape
-
-
-        # get delta values
-        delta_betas, delta_gammas = self.create_cbn_input(stat_emb)
 
         betas_cloned = self.betas.clone()
         gammas_cloned = self.gammas.clone()
-
-        # update the values of beta and gamma
-        betas_cloned += delta_betas
-        gammas_cloned += delta_gammas
 
         # get the mean and variance for the batch norm layer
         batch_mean = torch.mean(feature)
