@@ -65,7 +65,7 @@ class BN(nn.Module):
         feature_normalized = (feature-batch_mean)/torch.sqrt(batch_var+self.eps)
 
         # get the normalized feature map with the updated beta and gamma values
-        out = torch.mul(feature_normalized, gammas_expanded) + betas_expanded
+        out = feature_normalized
 
         return out
 
