@@ -14,6 +14,7 @@ import configs
 from data import H5Dataset
 from models.resnet_FN import resnet18
 from trainer import train_model
+from utils import metrics
 
 from torch.utils.data import Dataset
 import torch
