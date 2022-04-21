@@ -15,9 +15,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 from PIL import Image
 import h5py
+import pickle
+import pandas as pd
 
 
-def train_model(model, criterion, optimizer, scheduler, num_epochs=25):
+def train_model(model, criterion, optimizer, scheduler, num_epochs=25, save_freq, exp_name):
     since = time.time()
 
     train_accuracies = []
@@ -78,11 +80,19 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs=25):
                 best_model_wts = copy.deepcopy(model.state_dict())
 
         print()
+        if num_epochs%epoch==0:
+            torch.save(model.state_dict(), './logs/{}/epoch_{}.pth'.format(exp_name, epoch))
 
     time_elapsed = time.time() - since
     print(f'Training complete in {time_elapsed // 60:.0f}m {time_elapsed % 60:.0f}s')
     print(f'Best val Acc: {best_acc:4f}')
 
     model.load_state_dict(best_model_wts)
-    return model, [train_accuracies, train_loss, val_accuracies, val_loss]
+
+    torch.save(model.state_dict(), './logs/{}/best_model.pth'.format(exp_name, epoch))
+
+    df = pd.DataFrame(list(zip(train_accuracies, train_loss, val_accuracies, val_loss)), columns = ['train_accuracies', 'train_loss', 'val_accuracies', 'val_loss'])
+    df.to_csv('./logs/{}/train_logs.csv'.format(exp_name))
+
+    return model
     

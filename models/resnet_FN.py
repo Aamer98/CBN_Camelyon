@@ -5,9 +5,7 @@ import torch.nn as nn
 import math
 import torch.utils.model_zoo as model_zoo
 
-from bn import BN
 
-from sequential_modified import Sequential
 
 __all__ = ['ResNet', 'resnet18', 'resnet34', 'resnet50', 'resnet101',
            'resnet152']
@@ -27,7 +25,7 @@ def conv3x3(in_planes, out_planes, stride=1):
     return nn.Conv2d(in_planes, out_planes, kernel_size=3, stride=stride,
                      padding=1, bias=False)
 '''
-This modules returns both the conv feature map and the target data statistics embedding (unchanges)
+This modules returns both the conv feature map and the lstm question embedding (unchanges)
 since subsequent CBN layers in nn.Sequential will require both inputs
 '''
 class Conv2d(nn.Module):
@@ -38,97 +36,97 @@ class Conv2d(nn.Module):
         self.out_planes = out_planes
         self.conv = nn.Conv2d(in_planes, out_planes, kernel_size=kernel_size, stride=stride, bias=bias)
 
-    def forward(self, x, stat_emb):
+    def forward(self, x):
         out = self.conv(x)
-        return out, norm_emb
+        return out
 
 
 class BasicBlock(nn.Module):
     expansion = 1
 
-    def __init__(self, inplanes, planes, batch_size, emb_size, stride=1, downsample=None):
+    def __init__(self, inplanes, planes, stride=1, downsample=None):
         super(BasicBlock, self).__init__()
         self.conv1 = conv3x3(inplanes, planes, stride)
         # self.bn1 = nn.BatchNorm2d(planes)
-        self.bn1 = BN(Batch_size, planes)
+        self.bn1 = FN(planes)
         self.relu = nn.ReLU(inplace=True)
         self.conv2 = conv3x3(planes, planes)
         # self.bn2 = nn.BatchNorm2d(planes)
-        self.bn2 = BN(Batch_size, planes)
+        self.bn2 = FN(planes)
         self.downsample = downsample
         self.stride = stride
 
-    def forward(self, x, stat_emb):
+    def forward(self, x):
         residual = x
 
         out = self.conv1(x)
-        out, _ = self.bn1(out, stat_emb)
+        out, _ = self.bn1(out)
         out = self.relu(out)
 
         out = self.conv2(out)
-        out, _ = self.bn2(out, stat_emb)
+        out, _ = self.bn2(out)
 
         if self.downsample is not None:
-            residual, _ = self.downsample(x, stat_emb)
+            residual, _ = self.downsample(x)
 
         out += residual
         out = self.relu(out)
 
-        return out, stat_emb
+        return out
 
 
 class Bottleneck(nn.Module):
     expansion = 4
 
-    def __init__(self, inplanes, planes, Batch_size, emb_size, stride=1, downsample=None):
+    def __init__(self, inplanes, planes, stride=1, downsample=None):
         super(Bottleneck, self).__init__()
         self.conv1 = nn.Conv2d(inplanes, planes, kernel_size=1, bias=False)
         # self.bn1 = nn.BatchNorm2d(planes)
-        self.bn1 = BN(Batch_size, planes)
+        self.bn1 = FN(planes)
         self.conv2 = nn.Conv2d(planes, planes, kernel_size=3, stride=stride,
                                padding=1, bias=False)
         # self.bn2 = nn.BatchNorm2d(planes)
-        self.bn2 = BN(Batch_size, planes)
+        self.bn2 = FN(planes)
         self.conv3 = nn.Conv2d(planes, planes * 4, kernel_size=1, bias=False)
         # self.bn3 = nn.BatchNorm2d(planes * 4)
-        self.bn3 = BN(Batch_size, planes * 4)
+        self.bn3 = FN(planes * 4)
         self.relu = nn.ReLU(inplace=True)
         self.downsample = downsample
         self.stride = stride
 
-    def forward(self, x, stat_emb):
+    def forward(self, x):
         residual = x
 
         out = self.conv1(x)
-        out, _ = self.bn1(out, stat_emb)
+        out, _ = self.bn1(out)
         out = self.relu(out)
 
         out = self.conv2(out)
-        out, _ = self.bn2(out, stat_emb)
+        out, _ = self.bn2(out)
         out = self.relu(out)
 
         out = self.conv3(out)
-        out, _ = self.bn3(out, stat_emb)
+        out, _ = self.bn3(out)
 
         if self.downsample is not None:
-            residual, _ = self.downsample(x, stat_emb)
+            residual, _ = self.downsample(x)
 
         out += residual
         out = self.relu(out)
 
-        return out, stat_emb
+        return out
 
 class ResNet(nn.Module):
 
-    def __init__(self, block, layers, Batch_size, emb_size, num_classes=1000):
+    def __init__(self, block, layers, num_classes=1000):
         self.inplanes = 64
-        self.Batch_size = Batch_size
-        self.emb_size = emb_size
+        #self.lstm_size = lstm_size
+        #self.emb_size = emb_size
         super(ResNet, self).__init__()
         self.conv1 = nn.Conv2d(3, 64, kernel_size=7, stride=2, padding=3,
                                bias=False).cuda()
         # self.bn1 = nn.BatchNorm2d(64)
-        self.bn1 = BN(self.Batch_size, 64)
+        self.bn1 = FN(64)
         self.relu = nn.ReLU(inplace=True)
         self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
         self.layer1 = self._make_layer(block, 64, layers[0])
@@ -149,30 +147,30 @@ class ResNet(nn.Module):
     def _make_layer(self, block, planes, blocks, stride=1):
         downsample = None
         if stride != 1 or self.inplanes != planes * block.expansion:
-            downsample = Sequential(
+            downsample = nn.Sequential(
                 Conv2d(self.inplanes, planes * block.expansion, kernel_size=1, stride=stride, bias=False),
-                BN(self.Batch_size, planes * block.expansion),
+                FN(planes * block.expansion),
                 # nn.BatchNorm2d(planes * block.expansion),
             )
 
         layers = []
-        layers.append(block(self.inplanes, planes, self.Batch_size, self.emb_size, stride, downsample))
+        layers.append(block(self.inplanes, planes, stride, downsample))
         self.inplanes = planes * block.expansion
         for i in range(1, blocks):
-            layers.append(block(self.inplanes, planes, self.Batch_size, self.emb_size))
+            layers.append(block(self.inplanes, planes))
 
-        return Sequential(*layers)
+        return nn.Sequential(*layers)
 
-    def forward(self, x, stat_emb):
+    def forward(self, x):
         x = self.conv1(x)
-        x, _ = self.bn1(x, stat_emb)
+        x, _ = self.bn1(x)
         x = self.relu(x)
         x = self.maxpool(x)
 
-        x, _ = self.layer1(x, stat_emb)
-        x, _ = self.layer2(x, stat_emb)
-        x, _ = self.layer3(x, stat_emb)
-        x, _ = self.layer4(x, stat_emb)
+        x, _ = self.layer1(x)
+        x, _ = self.layer2(x)
+        x, _ = self.layer3(x)
+        x, _ = self.layer4(x)
 
         # not required currently
         # x = self.avgpool(x)
@@ -181,61 +179,56 @@ class ResNet(nn.Module):
 
         return x
 
-def resnet18(Batch_size, emb_size, pretrained=False, **kwargs):
+def resnet18(pretrained=False, **kwargs):
     """Constructs a ResNet-18 model.
-
     Args:
         pretrained (bool): If True, returns a model pre-trained on ImageNet
     """
-    model = ResNet(BasicBlock, [2, 2, 2, 2], Batch_size, emb_size, **kwargs)
+    model = ResNet(BasicBlock, [2, 2, 2, 2], **kwargs)
     if pretrained:
         model.load_state_dict(model_zoo.load_url(model_urls['resnet18']), strict=False)
     return model
 
 
-def resnet34(Batch_size, emb_size,pretrained=False, **kwargs):
+def resnet34(pretrained=False, **kwargs):
     """Constructs a ResNet-34 model.
-
     Args:
         pretrained (bool): If True, returns a model pre-trained on ImageNet
     """
-    model = ResNet(BasicBlock, [3, 4, 6, 3], Batch_size, emb_size,**kwargs)
+    model = ResNet(BasicBlock, [3, 4, 6, 3], **kwargs)
     if pretrained:
         model.load_state_dict(model_zoo.load_url(model_urls['resnet34']), strict=False)
     return model
 
 
-def resnet50(Batch_size, emb_size, pretrained=False, **kwargs):
+def resnet50(pretrained=False, **kwargs):
     """Constructs a ResNet-50 model.
-
     Args:
         pretrained (bool): If True, returns a model pre-trained on ImageNet
     """
-    model = ResNet(Bottleneck, [3, 4, 6, 3], Batch_size, emb_size, **kwargs)
+    model = ResNet(Bottleneck, [3, 4, 6, 3], **kwargs)
     if pretrained:
         model.load_state_dict(model_zoo.load_url(model_urls['resnet50']), strict=False)
     return model
 
 
-def resnet101(Batch_size, emb_size, pretrained=False, **kwargs):
+def resnet101(pretrained=False, **kwargs):
     """Constructs a ResNet-101 model.
-
     Args:
         pretrained (bool): If True, returns a model pre-trained on ImageNet
     """
-    model = ResNet(Bottleneck, [3, 4, 23, 3], Batch_size, emb_size, **kwargs)
+    model = ResNet(Bottleneck, [3, 4, 23, 3], **kwargs)
     if pretrained:
         model.load_state_dict(model_zoo.load_url(model_urls['resnet101']), strict=False)
     return model
 
 
-def resnet152(Batch_size, emb_size, pretrained=False, **kwargs):
+def resnet152(pretrained=False, **kwargs):
     """Constructs a ResNet-152 model.
-
     Args:
         pretrained (bool): If True, returns a model pre-trained on ImageNet
     """
-    model = ResNet(Bottleneck, [3, 8, 36, 3], Batch_size, emb_size, **kwargs)
+    model = ResNet(Bottleneck, [3, 8, 36, 3], **kwargs)
     if pretrained:
         model.load_state_dict(model_zoo.load_url(model_urls['resnet152']), strict=False)
     return model
