@@ -81,7 +81,7 @@ def train_model(model, criterion, optimizer, scheduler, save_freq, exp_name, num
 
         print()
         if num_epochs%epoch==0:
-            torch.save(model.state_dict(), './logs/{}/epoch_{}.pth'.format(exp_name, epoch))
+            torch.save(model.state_dict(), 'logs/{}/epoch_{}.pth'.format(exp_name, epoch))
 
     time_elapsed = time.time() - since
     print(f'Training complete in {time_elapsed // 60:.0f}m {time_elapsed % 60:.0f}s')
@@ -89,10 +89,10 @@ def train_model(model, criterion, optimizer, scheduler, save_freq, exp_name, num
 
     model.load_state_dict(best_model_wts)
 
-    torch.save(model.state_dict(), './logs/{}/best_model.pth'.format(exp_name, epoch))
+    torch.save(model.state_dict(), 'logs/{}/best_model.pth'.format(exp_name, epoch))
 
     df = pd.DataFrame(list(zip(train_accuracies, train_loss, val_accuracies, val_loss)), columns = ['train_accuracies', 'train_loss', 'val_accuracies', 'val_loss'])
-    df.to_csv('./logs/{}/train_logs.csv'.format(exp_name))
+    df.to_csv('logs/{}/train_logs.csv'.format(exp_name))
 
     return model
     

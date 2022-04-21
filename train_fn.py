@@ -47,7 +47,7 @@ def main():
     random.seed(args.seed)
 
 
-    save_path = './logs/{}'.format(args.exp_name)
+    save_path = 'logs/{}'.format(args.exp_name)
     if not os.path.exists(save_path):
         os.mkdir(save_path)
 
