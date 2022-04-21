@@ -43,7 +43,7 @@ cd CBN_Camelyon
 
 experiment = "FN"
 
-python train_fn -exp_name $experiment -batch_size 32
+python train_fn.py -exp_name $experiment -batch_size 32
 
 
 echo "-----------------------------------<End of run the program>---------------------------------"

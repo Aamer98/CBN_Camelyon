@@ -11,7 +11,7 @@
 #SBATCH --gres=gpu:1
 #SBATCH --ntasks-per-node=32
 #SBATCH --mem=200000M
-#SBATCH --time=0-06:00
+#SBATCH --time=0-05:00
 #SBATCH --account=rrg-ebrahimi
 
 nvidia-smi
@@ -43,7 +43,7 @@ cd CBN_Camelyon
 
 experiment = "BN"
 
-python train_bn -exp_name $experiment -batch_size 32
+python train_bn.py -exp_name $experiment -batch_size 32
 
 
 echo "-----------------------------------<End of run the program>---------------------------------"
