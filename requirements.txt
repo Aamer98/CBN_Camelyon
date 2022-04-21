@@ -1,10 +1,7 @@
 torch
 torchvision
 numpy
-pickle
+pickle-mixin
 pandas
-time
-copy
 matplotlib
 Pillow
-h5py
