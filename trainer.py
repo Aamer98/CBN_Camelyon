@@ -27,6 +27,12 @@ def train_model(model, criterion, optimizer, scheduler, save_freq, exp_name, num
     val_accuracies = []
     val_loss = []
 
+    val_precision = []
+    val_recall = []
+    val_f1 = []
+    val_specificity = []
+
+
     best_model_wts = copy.deepcopy(model.state_dict())
     best_acc = 0.0
 
@@ -42,6 +48,11 @@ def train_model(model, criterion, optimizer, scheduler, save_freq, exp_name, num
 
             running_loss = 0.0
             running_corrects = 0
+            running_prec = 0.0
+            running_recall = 0.0
+            running_f1 = 0.0
+            running_spec = 0.0
+        
 
             for inputs, labels in dataloaders[phase]:
                 inputs = inputs.to(device)
@@ -60,20 +71,37 @@ def train_model(model, criterion, optimizer, scheduler, save_freq, exp_name, num
 
                 running_loss += loss.item() * inputs.size(0)
                 running_corrects += torch.sum(preds == labels.data)
+                met = metrics(prediction, target)
+                running_prec += met['precision']
+                running_recall += met['recall']
+                running_f1 += met['f1']
+                running_spec += met['specificity']
+
+                {'accuracy': accuracy, 'precision': precision, 'recall': recall, 'f1': f1, 'specificity': specificity}
+                
             if phase == 'train':
                 scheduler.step()
 
             epoch_loss = running_loss / dataset_sizes[phase]
             epoch_acc = running_corrects.double() / dataset_sizes[phase]
 
+            epoch_prec = running_prec / dataset_sizes[phase]
+            epoch_recall = running_recall / dataset_sizes[phase]
+            epoch_f1 = running_f1 / dataset_sizes[phase]
+            epoch_spec = running_spec / dataset_sizes[phase]
+            
             if phase == 'train':
                 train_accuracies.append(epoch_acc)
                 train_loss.append(epoch_loss)
             else:
                 val_accuracies.append(epoch_acc)
                 val_loss.append(epoch_loss)                
-
+                val_precision.append(epoch_prec)
+                val_recall.append(epoch_recall)
+                val_f1.append(epoch_f1)
+                val_specificity.append(epoch_spec)
             print(f'{phase} Loss: {epoch_loss:.4f} Acc: {epoch_acc:.4f}')
+            print(f'{phase} precision: {epoch_prec:.4f} recall: {epoch_recall:.4f} f1: {epoch_f1:.4f} specificity: {epoch_spec:.4f}')
 
             if phase == 'val' and epoch_acc > best_acc:
                 best_acc = epoch_acc
@@ -91,7 +119,7 @@ def train_model(model, criterion, optimizer, scheduler, save_freq, exp_name, num
 
     torch.save(model.state_dict(), 'logs/{}/best_model.pth'.format(exp_name, epoch))
 
-    df = pd.DataFrame(list(zip(train_accuracies, train_loss, val_accuracies, val_loss)), columns = ['train_accuracies', 'train_loss', 'val_accuracies', 'val_loss'])
+    df = pd.DataFrame(list(zip(train_accuracies, train_loss, val_accuracies, val_loss, val_precision, val_recall, val_f1, val_specificity)), columns = ['train_accuracies', 'train_loss', 'val_accuracies', 'val_loss', 'val_precision', 'val_recall', 'val_f1', 'val_specificity'])
     df.to_csv('logs/{}/train_logs.csv'.format(exp_name))
 
     return model
