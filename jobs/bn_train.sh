@@ -10,8 +10,8 @@
 #SBATCH --nodes=1
 #SBATCH --gres=gpu:1
 #SBATCH --ntasks-per-node=32
-#SBATCH --mem=200000M
-#SBATCH --time=0-01:00
+#SBATCH --mem=130000M
+#SBATCH --time=0-00:20
 #SBATCH --account=rrg-ebrahimi
 
 nvidia-smi
@@ -41,9 +41,9 @@ cd $SLURM_TMPDIR
 
 cd CBN_Camelyon
 
-experiment = "BN"
 
-python train_bn.py -exp_name $experiment -batch_size 32
+
+python train_bn.py -exp_name BN -batch_size 32
 
 
 echo "-----------------------------------<End of run the program>---------------------------------"
@@ -51,4 +51,4 @@ date +"%T"
 echo "--------------------------------------<backup the result>-----------------------------------"
 date +"%T"
 cd $SLURM_TMPDIR
-cp -r $SLURM_TMPDIR/CBN_Camelyon/logs/$experiment ~/scratch/CBN_Camelyon/logs
+cp -r $SLURM_TMPDIR/CBN_Camelyon/logs/BN ~/scratch/CBN_Camelyon/logs

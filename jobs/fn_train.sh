@@ -41,9 +41,8 @@ cd $SLURM_TMPDIR
 
 cd CBN_Camelyon
 
-experiment = "FN"
 
-python train_fn.py -exp_name $experiment -batch_size 32
+python train_fn.py -exp_name FN -batch_size 32
 
 
 echo "-----------------------------------<End of run the program>---------------------------------"
@@ -51,4 +50,4 @@ date +"%T"
 echo "--------------------------------------<backup the result>-----------------------------------"
 date +"%T"
 cd $SLURM_TMPDIR
-cp -r $SLURM_TMPDIR/CBN_Camelyon/logs/$experiment ~/scratch/CBN_Camelyon/logs
+cp -r $SLURM_TMPDIR/CBN_Camelyon/logs/FN ~/scratch/CBN_Camelyon/logs
