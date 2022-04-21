@@ -18,6 +18,7 @@ import h5py
 import pickle
 import pandas as pd
 
+from utils import metrics
 
 def train_model(model, criterion, optimizer, scheduler, save_freq, exp_name, num_epochs=25):
     since = time.time()
