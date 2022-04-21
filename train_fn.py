@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 import data
 import configs
 from data import H5Dataset
-from models.resnet18_FN import resnet18
+from models.resnet_FN import resnet18
 from trainer import train
 
 from torch.utils.data import Dataset
