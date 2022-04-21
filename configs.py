@@ -1,4 +1,4 @@
-data_path = './dataset/'
+data_path = './dataset/camylon/'
 
 train_feat_path = data_path + 'camelyonpatch_level_2_split_train_x.h5'
 train_lbl_path = data_path + 'camelyonpatch_level_2_split_train_y.h5'

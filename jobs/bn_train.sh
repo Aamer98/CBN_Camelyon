@@ -23,6 +23,7 @@ echo "Copying the source code"
 date +"%T"
 cd $SLURM_TMPDIR
 cp -r ~/scratch/CBN_Camelyon .
+cp -r ~/scratch/FS_WSI_Datasets/camylon .
 
 echo "Copying the datasets"
 date +"%T"
