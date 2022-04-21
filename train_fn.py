@@ -59,21 +59,21 @@ def main():
     test_feat_path = data_path + 'camelyonpatch_level_2_split_test_x.h5'
     test_lbl_path = data_path + 'camelyonpatch_level_2_split_test_y.h5'
 
-    test_feat_path = data_path + 'camelyonpatch_level_2_split_val_x.h5'
-    test_lbl_path = data_path + 'camelyonpatch_level_2_split_val_y.h5'
-        
+    val_feat_path = data_path + 'camelyonpatch_level_2_split_val_x.h5'
+    val_lbl_path = data_path + 'camelyonpatch_level_2_split_val_y.h5'
+
     transform = transforms.Compose([transforms.ToPILImage(), 
                                 transforms.ToTensor()])
     target_transform = transforms.Compose([transforms.ToPILImage(), 
                                        transforms.ToTensor()])
 
     xy_train = H5Dataset(feat_path = train_feat_path, 
-                    lbl_path = train_label_path, 
+                    lbl_path = train_lbl_path, 
                     transform = transform, 
                     target_transform = target_transform)
 
     xy_val = H5Dataset(feat_path = val_feat_path, 
-                    lbl_path = val_label_path, 
+                    lbl_path = val_lbl_path, 
                     transform = transform, 
                     target_transform = target_transform)
 
