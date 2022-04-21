@@ -1,5 +1,5 @@
 import copy
-import argsparse
+import argparse
 import os
 import time
 import pickle
@@ -29,7 +29,7 @@ parser.add_argument('-exp_name', required=True, help="Experiment name")
 parser.add_argument('-lr', default=1e-3, type=float, help="Learning rate")
 parser.add_argument('-batch_size', default=2, type=int, help="Batch size")
 parser.add_argument('-seed', default=0, type=int, help="Seed for weight init")
-parser.add_argument('-epochs', default=20, type=int, help="Number of epochs")
+parser.add_argument('-epochs', default=25, type=int, help="Number of epochs")
 parser.add_argument('-save_freq', default=5, type=int, help="Frequency to save trained models")
 args = parser.parse_args()
 print(args)
