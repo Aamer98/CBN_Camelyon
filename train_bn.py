@@ -22,6 +22,7 @@ import torch.optim as optim
 import torchvision
 from torchvision import transforms
 from torch.optim import lr_scheduler
+from torch.utils.data import DataLoader
 
 
 parser = argparse.ArgumentParser()
