@@ -59,8 +59,8 @@ def main():
     test_feat_path = data_path + 'camelyonpatch_level_2_split_test_x.h5'
     test_lbl_path = data_path + 'camelyonpatch_level_2_split_test_y.h5'
 
-    val_feat_path = data_path + 'camelyonpatch_level_2_split_val_x.h5'
-    val_lbl_path = data_path + 'camelyonpatch_level_2_split_val_y.h5'
+    val_feat_path = data_path + 'camelyonpatch_level_2_split_valid_x.h5'
+    val_lbl_path = data_path + 'camelyonpatch_level_2_split_valid_y.h5'
 
     transform = transforms.Compose([transforms.ToPILImage(), 
                                 transforms.ToTensor()])
