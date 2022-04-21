@@ -19,7 +19,7 @@ import pickle
 import pandas as pd
 
 
-def train(model, criterion, optimizer, scheduler, save_freq, exp_name, num_epochs=25):
+def train_model(model, criterion, optimizer, scheduler, save_freq, exp_name, num_epochs=25):
     since = time.time()
 
     train_accuracies = []
