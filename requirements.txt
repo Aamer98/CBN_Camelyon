@@ -1,6 +1,5 @@
 torch
 torchvision
-os
 numpy
 pickle
 pandas
